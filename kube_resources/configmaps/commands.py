@@ -3,7 +3,7 @@ import time
 from kubernetes.client.models import V1ConfigMap
 
 from kube_resources import core_api as api
-from utils.kube_resources.utils import construct_configmap
+from kube_resources.utils import construct_configmap
 
 
 def _get_configmap_info(cm: V1ConfigMap) -> dict:

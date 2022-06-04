@@ -2,8 +2,8 @@ import time
 
 from kubernetes.client.models import V1Deployment
 
-from auto_tuner.utils.kube_resources.utils import construct_deployment
-from auto_tuner.utils.kube_resources import apps_api as api
+from kube_resources.utils import construct_deployment
+from kube_resources import apps_api as api
 
 
 def _get_deployment_info(deployment: V1Deployment):

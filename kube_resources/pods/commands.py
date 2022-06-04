@@ -1,7 +1,7 @@
 import time
 from kubernetes.client.models import V1Pod
-from auto_tuner.utils.kube_resources import core_api as api
-from auto_tuner.utils.kube_resources.utils import construct_pod
+from kube_resources import core_api as api
+from kube_resources.utils import construct_pod
 
 
 def _get_pod_info(p: V1Pod):

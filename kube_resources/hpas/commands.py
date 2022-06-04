@@ -2,8 +2,8 @@ import time
 
 from kubernetes.client.models import V1HorizontalPodAutoscaler
 
-from auto_tuner.utils.kube_resources.utils import construct_hpa
-from auto_tuner.utils.kube_resources import autoscaling_api as api
+from kube_resources.utils import construct_hpa
+from kube_resources import autoscaling_api as api
 
 
 def _get_hpa_info(hpa: V1HorizontalPodAutoscaler):

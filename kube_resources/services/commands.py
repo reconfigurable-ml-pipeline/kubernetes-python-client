@@ -1,7 +1,7 @@
 from kubernetes.client.models import V1Service, V1Endpoints
 
-from auto_tuner.utils.kube_resources.utils import construct_service
-from auto_tuner.utils.kube_resources import core_api as api
+from kube_resources.utils import construct_service
+from kube_resources import core_api as api
 
 
 def _get_service_info(service: V1Service):

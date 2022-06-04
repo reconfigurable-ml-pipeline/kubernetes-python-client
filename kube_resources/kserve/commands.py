@@ -2,7 +2,7 @@ import time
 
 from kserve import KServeClient, V1beta1InferenceService
 
-from auto_tuner.utils.kube_resources.utils import construct_inference_service
+from kube_resources.utils import construct_inference_service
 
 client = KServeClient()
 
