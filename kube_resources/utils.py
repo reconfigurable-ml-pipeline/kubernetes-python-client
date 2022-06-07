@@ -6,7 +6,9 @@ from kubernetes.client import (
     V1ServiceSpec, V1ServicePort, V1HorizontalPodAutoscaler, V1HorizontalPodAutoscalerSpec,
     V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource
 )
-from kserve import V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec
+from kserve import (
+    V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec, V1beta1Batcher
+)
 from kserve.constants import constants
 
 
@@ -249,6 +251,8 @@ def construct_inference_service(
         transformer_max_replicas: int = None,
         volumes: List[dict] = None,
         predictor_volume_mounts: List[dict] = None,
+        max_batch_size: int = None,
+        max_batch_latency: int = None,
 ) -> V1beta1InferenceService:
     assert predictor_image is not None or transformer_image is not None, "Specify predictor_image and/or" \
                                                                          " transformer_image"
@@ -263,6 +267,8 @@ def construct_inference_service(
         predictor_spec = V1beta1PredictorSpec(
             min_replicas=predictor_min_replicas,
             max_replicas=predictor_max_replicas,
+            batcher=V1beta1Batcher(max_batch_size, max_batch_latency)
+            if (max_batch_size and max_batch_latency) else None,
             containers=[
                 _construct_container(
                     f"predictor-{inference_service_name}",
