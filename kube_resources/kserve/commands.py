@@ -8,11 +8,13 @@ client = KServeClient()
 
 
 def _get_inference_service_info(s: dict):
+    predictor = s["spec"].get("predictor")
+    transformer = s["spec"].get("transformer")
     return {
         "kind": "InferenceService",
         "namespace": s["metadata"]["namespace"],
         "name": s["metadata"]["name"],
-        "terminating": s["metadata"]["deletion_timestamp"] is not None,
+        "terminating": s["metadata"].get("deletion_timestamp") is not None,
         "predictor": {
             "node": s["spec"]["predictor"]["node_name"],
             "containers": list(map(
@@ -24,10 +26,10 @@ def _get_inference_service_info(s: dict):
                 },
                 s["spec"]["predictor"]["containers"]
             ))
-        },
+        } if predictor else None,
         "transformer": {
-            "node": s["spec"]["transformer"]["node_name"]
-        }
+            "node": transformer["node_name"]
+        } if transformer else None
     }
 
 
