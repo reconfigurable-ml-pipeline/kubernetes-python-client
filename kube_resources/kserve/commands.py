@@ -14,21 +14,21 @@ def _get_inference_service_info(s: dict):
         "kind": "InferenceService",
         "namespace": s["metadata"]["namespace"],
         "name": s["metadata"]["name"],
-        "terminating": s["metadata"].get("deletion_timestamp") is not None,
+        "terminating": s["metadata"].get("deletionTimestamp") is not None,
         "predictor": {
-            "node": s["spec"]["predictor"]["node_name"],
+            "node": predictor.get("nodeName"),
             "containers": list(map(
                 lambda c: {
                     "image": c["image"],
                     "ports": c["ports"],
                     "resources": {"requests": c["resources"]["requests"], "limits": c["resources"]["limits"]},
-                    "env": c["env"]
+                    "env": c.get("env")
                 },
                 s["spec"]["predictor"]["containers"]
             ))
         } if predictor else None,
         "transformer": {
-            "node": transformer["node_name"]
+            "node": transformer("nodeName")
         } if transformer else None
     }
 

@@ -280,7 +280,8 @@ def construct_inference_service(
                     env_vars=predictor_env_vars,
                     container_ports=predictor_container_ports,
                     command=predictor_command,
-                    args=predictor_args
+                    args=predictor_args,
+                    volume_mounts=predictor_volume_mounts
                 )
             ],
             volumes=[
@@ -308,7 +309,6 @@ def construct_inference_service(
                     container_ports=transformer_container_ports,
                     command=transformer_command,
                     args=transformer_args,
-                    volume_mounts=predictor_volume_mounts
                 )
             ]
         )
