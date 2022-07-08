@@ -10,6 +10,7 @@ def _get_service_info(service: V1Service):
         "name": service.metadata.name,
         "port": service.spec.ports[0].port,
         "target_port": service.spec.ports[0].target_port,
+        "node_port": service.spec.ports[0].node_port,
         "port_name": service.spec.ports[0].name,
         "protocol": service.spec.ports[0].protocol,
         "selector": service.spec.selector
