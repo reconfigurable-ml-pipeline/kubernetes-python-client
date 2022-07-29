@@ -35,13 +35,13 @@ def _construct_container(
     if env_vars is None:
         env_vars = {}
     env_vars = list(map(
-        lambda k, v: V1EnvVar(
-            k,
+        lambda t: V1EnvVar(
+            t[0],
             (
-                lambda x: x if isinstance(x, str) else V1EnvVarSource(
+                lambda x: str(x) if not isinstance(x, dict) else V1EnvVarSource(
                     config_map_key_ref=V1ConfigMapKeySelector(name=x["name"], key=x["key"])
                 )
-            )(v)
+            )(t[1])
         ), env_vars.items()
     ))
     limits = {}
