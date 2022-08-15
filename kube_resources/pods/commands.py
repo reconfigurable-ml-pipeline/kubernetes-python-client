@@ -33,6 +33,21 @@ def _get_pod_info(p: V1Pod):
                         "message": c.state.waiting.message,
                         "reason": c.state.waiting.reason
                     } if c.state.waiting else None,
+                },
+                "last_state": {
+                    "running": {
+                        "started_at": c.last_state.running.started_at.isoformat()
+                    } if c.last_state.running else None,
+                    "terminated": {
+                        "finished_at": c.last_state.terminated.finished_at.isoformat(),
+                        "exit_code": c.last_state.terminated.exit_code,
+                        "message": c.last_state.terminated.message,
+                        "reason": c.last_state.terminated.reason,
+                    } if c.last_state.terminated else None,
+                    "waiting": {
+                        "message": c.last_state.waiting.message,
+                        "reason": c.last_state.waiting.reason
+                    } if c.last_state.waiting else None,
                 }
             }, p.status.container_statuses
         )),
