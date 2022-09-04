@@ -4,7 +4,8 @@ from kubernetes.client import (
     V1Pod, V1EnvVar, V1EnvVarSource, V1ConfigMapKeySelector, V1ResourceRequirements, V1ObjectMeta, V1PodSpec,
     V1Container, V1ContainerPort, V1Deployment, V1DeploymentSpec, V1LabelSelector, V1PodTemplateSpec, V1Service,
     V1ServiceSpec, V1ServicePort, V1HorizontalPodAutoscaler, V1HorizontalPodAutoscalerSpec,
-    V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource
+    V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource,
+    V1NFSVolumeSource,
 )
 from kserve import (
     V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec, V1beta1Batcher
@@ -67,10 +68,28 @@ def _construct_container(
     return V1Container(**container_kwargs)
 
 
+def _construct_volume(config: dict):
+    # Fixme: currently only allowing ConfigMap and NFS Volume types
+
+    if config.get("config_map"):
+        v = V1Volume(
+            name=config["name"],
+            config_map=V1ConfigMapVolumeSource(**config["config_map"])
+        )
+    elif config.get("nfs"):
+        v = V1Volume(
+            name=config["name"],
+            nfs=V1NFSVolumeSource(**config["nfs"])
+        )
+    else:
+        v = None
+    return v
+
 def construct_pod(
         name: str,
         image: str,
         namespace: str,
+        *,
         labels: dict = None,
         request_mem: str = None,
         request_cpu: str = None,
@@ -80,6 +99,7 @@ def construct_pod(
         container_ports: List[int] = None,
         command: str = None,
         args: List[str] = None,
+        volumes: List[dict] = None,
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -101,7 +121,8 @@ def construct_pod(
                     command=command,
                     args=args
                 )
-            ]
+            ],
+            volumes=[_construct_volume(v) for v in volumes] if volumes else None
         )
     )
     return pod
@@ -112,6 +133,7 @@ def construct_deployment(
         image: str,
         namespace: str,
         replicas: int,
+        *,
         labels: dict = None,
         request_mem: str = None,
         request_cpu: str = None,
@@ -121,6 +143,7 @@ def construct_deployment(
         container_ports: List[int] = None,
         command: str = None,
         args: List[str] = None,
+        volumes: List[dict] = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
@@ -134,7 +157,8 @@ def construct_deployment(
         env_vars=env_vars,
         container_ports=container_ports,
         command=command,
-        args=args
+        args=args,
+        volumes=volumes
     )
 
     deployment = V1Deployment(
@@ -257,12 +281,6 @@ def construct_inference_service(
     assert predictor_image is not None or transformer_image is not None, "Specify predictor_image and/or" \
                                                                          " transformer_image"
 
-    # Fixme: currently only allowing ConfigMap Volume type
-    volume_list = []
-    for vol in volumes:
-        if vol.get("config_map") is not None:
-            volume_list.append(vol)
-
     if predictor_image:
         predictor_spec = V1beta1PredictorSpec(
             min_replicas=predictor_min_replicas,
@@ -284,12 +302,7 @@ def construct_inference_service(
                     volume_mounts=predictor_volume_mounts
                 )
             ],
-            volumes=[
-                V1Volume(
-                    name=v["name"],
-                    config_map=V1ConfigMapVolumeSource(**v["config_map"])
-                ) for v in volume_list
-            ]
+            volumes=[_construct_volume(v) for v in volumes] if volumes else None
         )
     else:
         predictor_spec = None
