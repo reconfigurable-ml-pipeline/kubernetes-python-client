@@ -20,6 +20,7 @@ def _construct_container(
         request_cpu: str,
         limit_mem: str,
         limit_cpu: str,
+        limit_gpu: str = None,
         env_vars: dict = None,
         container_ports: List[int] = None,
         command: str = None,
@@ -51,6 +52,8 @@ def _construct_container(
         limits.update(memory=limit_mem)
     if limit_cpu:
         limits.update(cpu=limit_cpu)
+    if limit_gpu:
+        limits.update({"nvidia.com/gpu": limit_gpu})
     if request_mem:
         requests.update(memory=request_mem)
     if request_cpu:
@@ -95,6 +98,7 @@ def construct_pod(
         request_cpu: str = None,
         limit_mem: str = None,
         limit_cpu: str = None,
+        limit_gpu: str = None,
         env_vars: dict = None,
         container_ports: List[int] = None,
         command: str = None,
@@ -116,6 +120,7 @@ def construct_pod(
                     request_cpu=request_cpu,
                     limit_mem=limit_mem,
                     limit_cpu=limit_cpu,
+                    limit_gpu=limit_gpu,
                     env_vars=env_vars,
                     container_ports=container_ports,
                     command=command,
@@ -139,6 +144,7 @@ def construct_deployment(
         request_cpu: str = None,
         limit_mem: str = None,
         limit_cpu: str = None,
+        limit_gpu: str = None,
         env_vars: dict = None,
         container_ports: List[int] = None,
         command: str = None,
@@ -154,6 +160,7 @@ def construct_deployment(
         request_cpu=request_cpu,
         limit_mem=limit_mem,
         limit_cpu=limit_cpu,
+        limit_gpu=limit_gpu,
         env_vars=env_vars,
         container_ports=container_ports,
         command=command,
@@ -259,6 +266,7 @@ def construct_inference_service(
         transformer_request_cpu: str = None,
         predictor_limit_mem: str = None,
         predictor_limit_cpu: str = None,
+        predictor_limit_gpu: str = None,
         transformer_limit_mem: str = None,
         transformer_limit_cpu: str = None,
         predictor_env_vars: dict = None,
@@ -295,6 +303,7 @@ def construct_inference_service(
                     request_cpu=predictor_request_cpu,
                     limit_mem=predictor_limit_mem,
                     limit_cpu=predictor_limit_cpu,
+                    limit_gpu=predictor_limit_gpu,
                     env_vars=predictor_env_vars,
                     container_ports=predictor_container_ports,
                     command=predictor_command,
