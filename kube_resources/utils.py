@@ -104,6 +104,7 @@ def construct_pod(
         command: str = None,
         args: List[str] = None,
         volumes: List[dict] = None,
+        volume_mounts: List[dict] = None,
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -124,7 +125,8 @@ def construct_pod(
                     env_vars=env_vars,
                     container_ports=container_ports,
                     command=command,
-                    args=args
+                    args=args,
+                    volume_mounts=volume_mounts,
                 )
             ],
             volumes=[_construct_volume(v) for v in volumes] if volumes else None
@@ -150,6 +152,7 @@ def construct_deployment(
         command: str = None,
         args: List[str] = None,
         volumes: List[dict] = None,
+        volume_mounts: List[dict] = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
@@ -165,7 +168,8 @@ def construct_deployment(
         container_ports=container_ports,
         command=command,
         args=args,
-        volumes=volumes
+        volumes=volumes,
+        volume_mounts=volume_mounts,
     )
 
     deployment = V1Deployment(
