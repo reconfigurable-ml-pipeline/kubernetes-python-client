@@ -48,7 +48,6 @@ def create_hpa(
         target_name=target_name
     )
     response = api.create_namespaced_horizontal_pod_autoscaler(namespace=namespace, body=hpa)
-    time.sleep(1)
     return get_hpa(response.metadata.name, namespace)
 
 
@@ -78,7 +77,7 @@ def update_hpa(
         target_api_version: str = None,
         target_kind: str = None,
         target_name: str = None,
-        partial=False,
+        partial=True,
         namespace="default"
 ):
     hpa = api.read_namespaced_horizontal_pod_autoscaler(name=name, namespace=namespace)
@@ -101,7 +100,6 @@ def update_hpa(
         response = api.replace_namespaced_horizontal_pod_autoscaler(
             name=name, namespace=namespace, body=hpa
         )
-    time.sleep(1)
     return get_hpa(response.metadata.name, namespace)
 
 

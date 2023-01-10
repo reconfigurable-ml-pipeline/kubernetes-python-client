@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, TypedDict, Optional
 
 from kubernetes.client import (
     V1Pod, V1EnvVar, V1EnvVarSource, V1ConfigMapKeySelector, V1ResourceRequirements, V1ObjectMeta, V1PodSpec,
@@ -13,30 +13,34 @@ from kserve import (
 from kserve.constants import constants
 
 
-def _construct_container(
-        name: str,
-        image: str,
-        request_mem: str,
-        request_cpu: str,
-        limit_mem: str,
-        limit_cpu: str,
-        limit_gpu: str = None,
-        env_vars: dict = None,
-        container_ports: List[int] = None,
-        command: str = None,
-        args: List[str] = None,
-        volume_mounts: List[dict] = None,
-) -> V1Container:
-    container_kwargs = {"name": name, "image": image}
-    if container_ports:
-        container_kwargs.update({"ports": list(map(lambda p: V1ContainerPort(container_port=p), container_ports))})
-    if command:
-        container_kwargs.update({"command": [command]})
-    if args:
-        container_kwargs.update({"args": args})
-    if env_vars is None:
-        env_vars = {}
-    env_vars = list(map(
+class ContainerInfo(TypedDict):
+    name: str
+    image: str
+    request_mem: str
+    request_cpu: str
+    limit_mem: str
+    limit_cpu: str
+    limit_gpu: Optional[str]
+    env_vars: Optional[dict]
+    container_ports: Optional[List[int]]
+    command: Optional[str]
+    args: Optional[List[str]]
+    volume_mounts: Optional[List[dict]]
+
+
+def _construct_container(container_info: ContainerInfo) -> V1Container:
+    container_kwargs = {"name": container_info["name"], "image": container_info["image"]}
+    if container_info.get("container_ports"):
+        container_kwargs.update(
+            {"ports": list(map(lambda p: V1ContainerPort(container_port=p), container_info["container_ports"]))}
+        )
+    if container_info.get("command"):
+        container_kwargs.update({"command": [container_info["command"]]})
+    if container_info.get("args"):
+        container_kwargs.update({"args": container_info["args"]})
+    if container_info.get("env_vars") is None:
+        container_info["env_vars"] = {}
+    container_info["env_vars"] = list(map(
         lambda t: V1EnvVar(
             t[0],
             (
@@ -44,28 +48,28 @@ def _construct_container(
                     config_map_key_ref=V1ConfigMapKeySelector(name=x["name"], key=x["key"])
                 )
             )(t[1])
-        ), env_vars.items()
+        ), container_info["env_vars"].items()
     ))
     limits = {}
     requests = {}
-    if limit_mem:
-        limits.update(memory=limit_mem)
-    if limit_cpu:
-        limits.update(cpu=limit_cpu)
-    if limit_gpu:
-        limits.update({"nvidia.com/gpu": limit_gpu})
-    if request_mem:
-        requests.update(memory=request_mem)
-    if request_cpu:
-        requests.update(cpu=request_cpu)
+    if container_info.get("limit_mem"):
+        limits.update(memory=container_info["limit_mem"])
+    if container_info.get("limit_cpu"):
+        limits.update(cpu=container_info["limit_cpu"])
+    if container_info.get("limit_gpu"):
+        limits.update({"nvidia.com/gpu": container_info["limit_gpu"]})
+    if container_info.get("request_mem"):
+        requests.update(memory=container_info["request_mem"])
+    if container_info.get("request_cpu"):
+        requests.update(cpu=container_info["request_cpu"])
     if requests or limits:
         container_kwargs.update(resources=V1ResourceRequirements(limits=limits or None, requests=requests or None))
-    if env_vars:
-        container_kwargs.update(env=env_vars)
+    if container_info["env_vars"]:
+        container_kwargs.update(env=container_info["env_vars"])
 
     mounts = []
-    if volume_mounts:
-        for vm in volume_mounts:
+    if container_info.get("volume_mounts"):
+        for vm in container_info["volume_mounts"]:
             mounts.append(V1VolumeMount(**vm))
         container_kwargs.update(volume_mounts=mounts)
     return V1Container(**container_kwargs)
@@ -90,21 +94,11 @@ def _construct_volume(config: dict):
 
 def construct_pod(
         name: str,
-        image: str,
         namespace: str,
+        containers: List[ContainerInfo],
         *,
         labels: dict = None,
-        request_mem: str = None,
-        request_cpu: str = None,
-        limit_mem: str = None,
-        limit_cpu: str = None,
-        limit_gpu: str = None,
-        env_vars: dict = None,
-        container_ports: List[int] = None,
-        command: str = None,
-        args: List[str] = None,
         volumes: List[dict] = None,
-        volume_mounts: List[dict] = None,
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -113,22 +107,7 @@ def construct_pod(
         "Pod",
         metadata=V1ObjectMeta(name=name, namespace=namespace, labels=labels),
         spec=V1PodSpec(
-            containers=[
-                _construct_container(
-                    name=name,
-                    image=image,
-                    request_mem=request_mem,
-                    request_cpu=request_cpu,
-                    limit_mem=limit_mem,
-                    limit_cpu=limit_cpu,
-                    limit_gpu=limit_gpu,
-                    env_vars=env_vars,
-                    container_ports=container_ports,
-                    command=command,
-                    args=args,
-                    volume_mounts=volume_mounts,
-                )
-            ],
+            containers=[_construct_container(ci) for ci in containers],
             volumes=[_construct_volume(v) for v in volumes] if volumes else None
         )
     )
@@ -137,39 +116,19 @@ def construct_pod(
 
 def construct_deployment(
         name: str,
-        image: str,
         namespace: str,
+        containers: List[ContainerInfo],
         replicas: int,
         *,
         labels: dict = None,
-        request_mem: str = None,
-        request_cpu: str = None,
-        limit_mem: str = None,
-        limit_cpu: str = None,
-        limit_gpu: str = None,
-        env_vars: dict = None,
-        container_ports: List[int] = None,
-        command: str = None,
-        args: List[str] = None,
         volumes: List[dict] = None,
-        volume_mounts: List[dict] = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
-        image,
         namespace,
+        containers,
         labels=labels,
-        request_mem=request_mem,
-        request_cpu=request_cpu,
-        limit_mem=limit_mem,
-        limit_cpu=limit_cpu,
-        limit_gpu=limit_gpu,
-        env_vars=env_vars,
-        container_ports=container_ports,
-        command=command,
-        args=args,
         volumes=volumes,
-        volume_mounts=volume_mounts,
     )
 
     deployment = V1Deployment(
@@ -261,82 +220,39 @@ def construct_configmap(name: str, namespace: str, data: dict, binary_data=None)
 def construct_inference_service(
         inference_service_name: str,
         namespace: str,
+        *,
+        predictor_container: ContainerInfo = None,
+        transformer_container: ContainerInfo = None,
         labels: dict = None,
-        predictor_image: str = None,
-        transformer_image: str = None,
-        predictor_request_mem: str = None,
-        predictor_request_cpu: str = None,
-        transformer_request_mem: str = None,
-        transformer_request_cpu: str = None,
-        predictor_limit_mem: str = None,
-        predictor_limit_cpu: str = None,
-        predictor_limit_gpu: str = None,
-        transformer_limit_mem: str = None,
-        transformer_limit_cpu: str = None,
-        predictor_env_vars: dict = None,
-        transformer_env_vars: dict = None,
-        predictor_container_ports: List[int] = None,
-        transformer_container_ports: List[int] = None,
-        predictor_command: str = None,
-        transformer_command: str = None,
-        predictor_args: List[str] = None,
-        transformer_args: List[str] = None,
         predictor_min_replicas: int = None,
         predictor_max_replicas: int = None,
         transformer_min_replicas: int = None,
         transformer_max_replicas: int = None,
-        volumes: List[dict] = None,
-        predictor_volume_mounts: List[dict] = None,
+        predictor_volumes: List[dict] = None,
+        transformer_volumes: List[dict] = None,
         max_batch_size: int = None,
         max_batch_latency: int = None,
 ) -> V1beta1InferenceService:
-    assert predictor_image is not None or transformer_image is not None, "Specify predictor_image and/or" \
-                                                                         " transformer_image"
+    assert predictor_container is not None or transformer_container is not None, "Specify predictor_container and/or" \
+                                                                         " transformer_container"
 
-    if predictor_image:
+    if predictor_container:
         predictor_spec = V1beta1PredictorSpec(
             min_replicas=predictor_min_replicas,
             max_replicas=predictor_max_replicas,
             batcher=V1beta1Batcher(max_batch_size, max_batch_latency)
             if (max_batch_size and max_batch_latency) else None,
-            containers=[
-                _construct_container(
-                    f"predictor-{inference_service_name}",
-                    predictor_image,
-                    request_mem=predictor_request_mem,
-                    request_cpu=predictor_request_cpu,
-                    limit_mem=predictor_limit_mem,
-                    limit_cpu=predictor_limit_cpu,
-                    limit_gpu=predictor_limit_gpu,
-                    env_vars=predictor_env_vars,
-                    container_ports=predictor_container_ports,
-                    command=predictor_command,
-                    args=predictor_args,
-                    volume_mounts=predictor_volume_mounts
-                )
-            ],
-            volumes=[_construct_volume(v) for v in volumes] if volumes else None
+            containers=[_construct_container(predictor_container)],
+            volumes=[_construct_volume(v) for v in predictor_volumes] if predictor_volumes else None
         )
     else:
         predictor_spec = None
-    if transformer_image:
+    if transformer_container:
         transformer_spec = V1beta1TransformerSpec(
             min_replicas=transformer_min_replicas,
             max_replicas=transformer_max_replicas,
-            containers=[
-                _construct_container(
-                    f"transformer-{inference_service_name}",
-                    transformer_image,
-                    request_mem=transformer_request_mem,
-                    request_cpu=transformer_request_cpu,
-                    limit_mem=transformer_limit_mem,
-                    limit_cpu=transformer_limit_cpu,
-                    env_vars=transformer_env_vars,
-                    container_ports=transformer_container_ports,
-                    command=transformer_command,
-                    args=transformer_args,
-                )
-            ]
+            containers=[_construct_container(transformer_container)],
+            volumes=[_construct_volume(v) for v in transformer_volumes] if transformer_volumes else None
         )
     else:
         transformer_spec = None

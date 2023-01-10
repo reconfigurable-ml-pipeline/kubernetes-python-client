@@ -26,7 +26,7 @@ def create_configmap(configmap_name: str, data: dict, namespace="default") -> di
     return _get_configmap_info(response)
 
 
-def update_configmap(configmap_name: str, data: dict, namespace="default", partial=False) -> dict:
+def update_configmap(configmap_name: str, data: dict, namespace="default", partial=True) -> dict:
     old_cm = get_configmap(configmap_name, namespace)
     if partial:
         data = {**old_cm["data"], **data}

@@ -80,7 +80,7 @@ def update_service(
         port_name: str = None,
         selector: dict = None,
         protocol: str = None,
-        partial=False,
+        partial=True,
         namespace="default"
 ):
     service = api.read_namespaced_service(name=name, namespace=namespace)  # type: V1Service

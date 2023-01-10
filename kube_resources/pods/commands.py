@@ -1,7 +1,8 @@
 import time
+from typing import List
 from kubernetes.client.models import V1Pod
 from kube_resources import core_api as api
-from kube_resources.utils import construct_pod
+from kube_resources.utils import construct_pod, ContainerInfo
 
 
 def _get_pod_info(p: V1Pod):
@@ -56,20 +57,21 @@ def _get_pod_info(p: V1Pod):
 
 def create_pod(
         name: str,
-        image: str,
+        containers: List[ContainerInfo],
         namespace="default",
-        **kwargs
+        labels: dict = None,
+        volumes: List[dict] = None
 ):
     pod = construct_pod(
         name=name,
-        image=image,
         namespace=namespace,
-        **kwargs
+        containers=containers,
+        labels=labels,
+        volumes=volumes
     )
     response = api.create_namespaced_pod(
         namespace=namespace, body=pod
     )
-    time.sleep(1)
     return get_pod(response.metadata.name, namespace)
 
 
@@ -91,32 +93,24 @@ def get_pod(pod_name, namespace="default"):
 
 def update_pod(
         name,
+        containers: List[ContainerInfo],
         labels: dict = None,
-        request_mem: str = None,
-        request_cpu: str = None,
-        limit_mem: str = None,
-        limit_cpu: str = None,
-        partial=False,
+        volumes: List[dict] = None,
+        partial=True,
         namespace="default"
 ):
     pod = api.read_namespaced_pod(name=name, namespace=namespace)  # type: V1Pod
-    resources = pod.spec.containers[0].resources
     pod = construct_pod(
         name,
-        image=pod.spec.containers[0].image,
         namespace=pod.metadata.namespace,
-        labels=labels or pod.metadata.labels,
-        request_mem=request_mem or resources.requests["memory"],
-        request_cpu=request_cpu or resources.requests["cpu"],
-        limit_mem=limit_mem or resources.limits["memory"],
-        limit_cpu=limit_cpu or resources.limits["cpu"],
-
+        containers=containers,
+        labels=labels,
+        volumes=volumes
     )
     if partial:
         response = api.patch_namespaced_pod(name=name, namespace=namespace, body=pod)
     else:
         response = api.replace_namespaced_pod(name=name, namespace=namespace, body=pod)
-    time.sleep(1)
     return get_pod(response.metadata.name, namespace=namespace)
 
 
