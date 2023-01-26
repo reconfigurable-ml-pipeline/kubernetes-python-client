@@ -5,7 +5,7 @@ from kubernetes.client import (
     V1Container, V1ContainerPort, V1Deployment, V1DeploymentSpec, V1LabelSelector, V1PodTemplateSpec, V1Service,
     V1ServiceSpec, V1ServicePort, V1HorizontalPodAutoscaler, V1HorizontalPodAutoscalerSpec,
     V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource,
-    V1NFSVolumeSource,
+    V1NFSVolumeSource, V1EmptyDirVolumeSource
 )
 from kserve import (
     V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec, V1beta1Batcher
@@ -76,7 +76,7 @@ def _construct_container(container_info: ContainerInfo) -> V1Container:
 
 
 def _construct_volume(config: dict):
-    # Fixme: currently only allowing ConfigMap and NFS Volume types
+    # Fixme: currently only allowing ConfigMap, NFS and emptyDir Volume types
 
     if config.get("config_map"):
         v = V1Volume(
@@ -87,6 +87,11 @@ def _construct_volume(config: dict):
         v = V1Volume(
             name=config["name"],
             nfs=V1NFSVolumeSource(**config["nfs"])
+        )
+    elif config.get("empty_dir"):
+        v = V1Volume(
+            name=config.get["name"],
+            empty_dir=V1EmptyDirVolumeSource()
         )
     else:
         v = None
