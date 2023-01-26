@@ -5,7 +5,7 @@ from kubernetes.client import (
     V1Container, V1ContainerPort, V1Deployment, V1DeploymentSpec, V1LabelSelector, V1PodTemplateSpec, V1Service,
     V1ServiceSpec, V1ServicePort, V1HorizontalPodAutoscaler, V1HorizontalPodAutoscalerSpec,
     V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource,
-    V1NFSVolumeSource, V1EmptyDirVolumeSource
+    V1NFSVolumeSource, V1EmptyDirVolumeSource, V1Probe, V1ExecAction, V1HTTPGetAction
 )
 from kserve import (
     V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec, V1beta1Batcher
@@ -26,6 +26,7 @@ class ContainerInfo(TypedDict):
     command: Optional[str]
     args: Optional[List[str]]
     volume_mounts: Optional[List[dict]]
+    readiness_probe: Optional[dict]
 
 
 def _construct_container(container_info: ContainerInfo) -> V1Container:
@@ -72,6 +73,22 @@ def _construct_container(container_info: ContainerInfo) -> V1Container:
         for vm in container_info["volume_mounts"]:
             mounts.append(V1VolumeMount(**vm))
         container_kwargs.update(volume_mounts=mounts)
+    
+    if container_info.get("readiness_probe"):
+        rp = container_info["readiness_probe"]
+        rp_kwargs = dict(
+            initial_delay_seconds=rp.get("initial_delay_seconds"),
+            period_seconds=rp.get("period_seconds"),
+            timeout_seconds=rp.get("timeout_seconds"),
+            success_threshold=rp.get("success_threshold")
+        )
+        if rp.get("exec"):
+            rp_kwargs["_exec"] = V1ExecAction(command=rp["exec"])
+        elif rp.get("http_get"):
+            rp_kwargs["http_get"] = V1HTTPGetAction(path=rp["http_get"].get("path"), port=rp["http_get"]["port"])
+        else:
+            pass  # Todo: Add other types of probes
+        container_kwargs.update(readiness_probe=V1Probe(**rp_kwargs))
     return V1Container(**container_kwargs)
 
 
