@@ -107,7 +107,7 @@ def _construct_volume(config: dict):
         )
     elif config.get("empty_dir"):
         v = V1Volume(
-            name=config.get["name"],
+            name=config["name"],
             empty_dir=V1EmptyDirVolumeSource()
         )
     else:
