@@ -1,11 +1,13 @@
 import time
-from typing import List
-from kubernetes.client.models import V1Pod
+from typing import List, Callable
+from kubernetes.client.models import V1Pod, V1ContainerStatus
 from kube_resources import core_api as api
 from kube_resources.utils import construct_pod, ContainerInfo
 
 
 def _get_pod_info(p: V1Pod):
+    container_statuses: Callable[[V1Pod], List[V1ContainerStatus]] = lambda pod: pod.status.container_statuses
+    
     return {
         "kind": "Pod",
         "pod_ip": p.status.pod_ip,
@@ -15,6 +17,7 @@ def _get_pod_info(p: V1Pod):
         "labels": p.metadata.labels,
         "phase": p.status.phase,
         "terminating": p.metadata.deletion_timestamp is not None,
+        "restart_policy": p.spec.restart_policy,
         "container_statuses": list(map(
             lambda c: {
                 "container_name": c.name,
@@ -50,7 +53,7 @@ def _get_pod_info(p: V1Pod):
                         "reason": c.last_state.waiting.reason
                     } if c.last_state.waiting else None,
                 }
-            }, p.status.container_statuses
+            }, container_statuses(p)
         )),
     }
 
@@ -60,14 +63,16 @@ def create_pod(
         containers: List[ContainerInfo],
         namespace="default",
         labels: dict = None,
-        volumes: List[dict] = None
+        volumes: List[dict] = None,
+        restart_policy: str = None,
 ):
     pod = construct_pod(
         name=name,
         namespace=namespace,
         containers=containers,
         labels=labels,
-        volumes=volumes
+        volumes=volumes,
+        restart_policy=restart_policy
     )
     response = api.create_namespaced_pod(
         namespace=namespace, body=pod
@@ -97,7 +102,8 @@ def update_pod(
         labels: dict = None,
         volumes: List[dict] = None,
         partial=True,
-        namespace="default"
+        namespace="default",
+        restart_policy: str = None,
 ):
     pod = api.read_namespaced_pod(name=name, namespace=namespace)  # type: V1Pod
     pod = construct_pod(
@@ -105,7 +111,8 @@ def update_pod(
         namespace=pod.metadata.namespace,
         containers=containers,
         labels=labels,
-        volumes=volumes
+        volumes=volumes,
+        restart_policy=restart_policy
     )
     if partial:
         response = api.patch_namespaced_pod(name=name, namespace=namespace, body=pod)

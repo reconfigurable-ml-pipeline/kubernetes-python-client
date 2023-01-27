@@ -51,7 +51,9 @@ def create_inference_service(
     predictor_volumes: List[dict] = None,
     transformer_volumes: List[dict] = None,
     max_batch_size: int = None,
-    max_batch_latency: int = None
+    max_batch_latency: int = None,
+    predictor_restart_policy: str = None,
+    transformer_restart_policy: str = None,
 ):
     inference_service_obj = construct_inference_service(
         inference_service_name, 
@@ -66,7 +68,9 @@ def create_inference_service(
         predictor_volumes=predictor_volumes,
         transformer_volumes=transformer_volumes,
         max_batch_size=max_batch_size,
-        max_batch_latency=max_batch_latency
+        max_batch_latency=max_batch_latency,
+        predictor_restart_policy=predictor_restart_policy,
+        transformer_restart_policy=transformer_restart_policy
     )
     response = client.create(inference_service_obj, namespace)
     return get_inference_service(response["metadata"]["name"], namespace)

@@ -121,6 +121,7 @@ def construct_pod(
         *,
         labels: dict = None,
         volumes: List[dict] = None,
+        restart_policy: str = None
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -130,7 +131,8 @@ def construct_pod(
         metadata=V1ObjectMeta(name=name, namespace=namespace, labels=labels),
         spec=V1PodSpec(
             containers=[_construct_container(ci) for ci in containers],
-            volumes=[_construct_volume(v) for v in volumes] if volumes else None
+            volumes=[_construct_volume(v) for v in volumes] if volumes else None,
+            restart_policy=restart_policy,
         )
     )
     return pod
@@ -144,6 +146,7 @@ def construct_deployment(
         *,
         labels: dict = None,
         volumes: List[dict] = None,
+        restart_policy: str = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
@@ -151,6 +154,7 @@ def construct_deployment(
         containers,
         labels=labels,
         volumes=volumes,
+        restart_policy=restart_policy,
     )
 
     deployment = V1Deployment(
@@ -254,6 +258,8 @@ def construct_inference_service(
         transformer_volumes: List[dict] = None,
         max_batch_size: int = None,
         max_batch_latency: int = None,
+        predictor_restart_policy: str = None,
+        transformer_restart_policy: str = None,
 ) -> V1beta1InferenceService:
     assert predictor_container is not None or transformer_container is not None, "Specify predictor_container and/or" \
                                                                          " transformer_container"
@@ -265,7 +271,8 @@ def construct_inference_service(
             batcher=V1beta1Batcher(max_batch_size, max_batch_latency)
             if (max_batch_size and max_batch_latency) else None,
             containers=[_construct_container(predictor_container)],
-            volumes=[_construct_volume(v) for v in predictor_volumes] if predictor_volumes else None
+            volumes=[_construct_volume(v) for v in predictor_volumes] if predictor_volumes else None,
+            restart_policy=predictor_restart_policy
         )
     else:
         predictor_spec = None
@@ -274,7 +281,8 @@ def construct_inference_service(
             min_replicas=transformer_min_replicas,
             max_replicas=transformer_max_replicas,
             containers=[_construct_container(transformer_container)],
-            volumes=[_construct_volume(v) for v in transformer_volumes] if transformer_volumes else None
+            volumes=[_construct_volume(v) for v in transformer_volumes] if transformer_volumes else None,
+            restart_policy=transformer_restart_policy,
         )
     else:
         transformer_spec = None

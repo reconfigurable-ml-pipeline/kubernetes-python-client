@@ -46,7 +46,8 @@ def create_deployment(
         replicas: int,
         namespace="default",
         labels: dict = None,
-        volumes: List[dict] = None
+        volumes: List[dict] = None,
+        restart_policy: str = None,
 ):
     deployment = construct_deployment(
         name=name,
@@ -54,7 +55,8 @@ def create_deployment(
         containers=containers,
         replicas=replicas,
         labels=labels,
-        volumes=volumes
+        volumes=volumes,
+        restart_policy=restart_policy,
     )
     response = api.create_namespaced_deployment(namespace=namespace, body=deployment)
     return get_deployment(response.metadata.name, namespace)
@@ -85,6 +87,7 @@ def update_deployment(
         labels: dict = None,
         volumes: List[dict] = None,
         partial=True,
+        restart_policy: str = None,
         namespace="default"
 ):
     deployment = api.read_namespaced_deployment(name=name, namespace=namespace)  # type: V1Deployment
@@ -94,7 +97,8 @@ def update_deployment(
         containers=containers,
         replicas=replicas,
         labels=labels,
-        volumes=volumes
+        volumes=volumes,
+        restart_policy=restart_policy
     )
     if partial:
         response = api.patch_namespaced_deployment(name=name, namespace=namespace, body=deployment)
