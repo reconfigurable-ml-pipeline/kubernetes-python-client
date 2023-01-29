@@ -36,6 +36,7 @@ def _get_deployment_info(deployment: V1Deployment):
             "available_replicas": deployment.status.available_replicas,
             "replicas": deployment.status.replicas,
             "ready_replicas": deployment.status.ready_replicas,
+            "updated_replicas": deployment.status.updated_replicas,
         }
     }
 
