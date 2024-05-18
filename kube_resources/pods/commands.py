@@ -6,7 +6,7 @@ from kube_resources.utils import construct_pod, ContainerInfo
 
 
 def _get_pod_info(p: V1Pod):
-    container_statuses: Callable[[V1Pod], List[V1ContainerStatus]] = lambda pod: pod.status.container_statuses
+    container_statuses: Callable[[V1Pod], List[V1ContainerStatus]] = lambda pod: pod.status.container_statuses or []
     
     return {
         "kind": "Pod",
