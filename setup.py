@@ -13,7 +13,7 @@ setup(
     packages=find_packages("."),
     long_description=read(),
     install_requires=[
-        "kubernetes==25.3.0",
-        "kserve==0.10.0",
+        "kubernetes==29.0.0",
+        "kserve==0.12.1",
     ]
 )
