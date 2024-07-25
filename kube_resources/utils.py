@@ -27,10 +27,11 @@ class ContainerInfo(TypedDict):
     args: Optional[List[str]]
     volume_mounts: Optional[List[dict]]
     readiness_probe: Optional[dict]
+    image_pull_policy: Optional[str]
 
 
 def _construct_container(container_info: ContainerInfo) -> V1Container:
-    container_kwargs = {"name": container_info["name"], "image": container_info["image"]}
+    container_kwargs = {"name": container_info["name"], "image": container_info["image"], "image_pull_policy": container_info.get("image_pull_policy")}
     if container_info.get("container_ports"):
         container_kwargs.update(
             {"ports": list(map(lambda p: V1ContainerPort(container_port=p), container_info["container_ports"]))}
@@ -182,11 +183,8 @@ def construct_service(
         node_port: int = None,
         port_name: str = None,
         expose_type: str = None,
-        protocol: str = None
+        protocol: str = "TCP"
 ) -> V1Service:
-    if protocol is None:
-        protocol = "TCP"
-
     service = V1Service(
         api_version="v1",
         kind="Service",
