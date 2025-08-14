@@ -115,7 +115,7 @@ def update_pod(
         restart_policy=restart_policy
     )
     if partial:
-        response = api.patch_namespaced_pod(name=name, namespace=namespace, body=pod)
+        response = api.patch_namespaced_pod_resize(name=name, namespace=namespace, body=pod)
     else:
         response = api.replace_namespaced_pod(name=name, namespace=namespace, body=pod)
     return get_pod(response.metadata.name, namespace=namespace)
