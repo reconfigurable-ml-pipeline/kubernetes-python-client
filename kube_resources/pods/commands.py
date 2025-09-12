@@ -16,6 +16,9 @@ def _get_pod_info(p: V1Pod):
         "node": p.spec.node_name,
         "labels": p.metadata.labels,
         "phase": p.status.phase,
+        "conditions": list(map(
+            lambda x: {"reason": x.reason, "type": x.type, "message": x.message}, p.status.conditions
+        )) if p.status.conditions else [],
         "terminating": p.metadata.deletion_timestamp is not None,
         "restart_policy": p.spec.restart_policy,
         "container_statuses": list(map(
