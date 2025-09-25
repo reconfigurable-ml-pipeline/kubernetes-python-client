@@ -28,8 +28,10 @@ def create_service(
         node_port: int = None,
         expose_type: str = None,
         protocol: str = None,
+        cluster_ip: str = None,
         namespace="default"
 ):
+ 
     service = construct_service(
         name=name,
         namespace=namespace,
@@ -39,7 +41,8 @@ def create_service(
         node_port=node_port,
         selector=selector,
         expose_type=expose_type,
-        protocol=protocol
+        protocol=protocol,
+        cluster_ip=cluster_ip,
     )
     response = api.create_namespaced_service(namespace=namespace, body=service)
     return get_service(response.metadata.name, namespace)

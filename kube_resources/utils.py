@@ -183,7 +183,8 @@ def construct_service(
         node_port: int = None,
         port_name: str = None,
         expose_type: str = None,
-        protocol: str = "TCP"
+        protocol: str = "TCP",
+        cluster_ip: str = None,
 ) -> V1Service:
     service = V1Service(
         api_version="v1",
@@ -196,6 +197,7 @@ def construct_service(
                 )
             ],
             selector=selector,
+            cluster_ip=cluster_ip,
             type=expose_type
         )
     )
