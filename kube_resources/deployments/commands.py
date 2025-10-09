@@ -50,6 +50,7 @@ def create_deployment(
         annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None,
+        scheduler_name: str = None,
 ):
     deployment = construct_deployment(
         name=name,
@@ -60,6 +61,7 @@ def create_deployment(
         annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy,
+        scheduler_name=scheduler_name,
     )
     response = api.create_namespaced_deployment(namespace=namespace, body=deployment)
     return get_deployment(response.metadata.name, namespace)

@@ -123,7 +123,8 @@ def construct_pod(
         labels: dict = None,
         annotations: dict = None,
         volumes: List[dict] = None,
-        restart_policy: str = None
+        restart_policy: str = None,
+        scheduler_name: str = None,
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -135,6 +136,7 @@ def construct_pod(
             containers=[_construct_container(ci) for ci in containers],
             volumes=[_construct_volume(v) for v in volumes] if volumes else None,
             restart_policy=restart_policy,
+            scheduler_name=scheduler_name,
         )
     )
     return pod
@@ -150,6 +152,7 @@ def construct_deployment(
         annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None,
+        scheduler_name: str = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
@@ -159,6 +162,7 @@ def construct_deployment(
         annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy,
+        scheduler_name=scheduler_name,
     )
 
     deployment = V1Deployment(
