@@ -47,6 +47,7 @@ def create_deployment(
         replicas: int,
         namespace="default",
         labels: dict = None,
+        annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None,
 ):
@@ -56,6 +57,7 @@ def create_deployment(
         containers=containers,
         replicas=replicas,
         labels=labels,
+        annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy,
     )

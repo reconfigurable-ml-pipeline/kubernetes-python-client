@@ -66,6 +66,7 @@ def create_pod(
         containers: List[ContainerInfo],
         namespace="default",
         labels: dict = None,
+        annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None,
 ):
@@ -74,6 +75,7 @@ def create_pod(
         namespace=namespace,
         containers=containers,
         labels=labels,
+        annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy
     )

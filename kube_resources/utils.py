@@ -121,6 +121,7 @@ def construct_pod(
         containers: List[ContainerInfo],
         *,
         labels: dict = None,
+        annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None
 ) -> V1Pod:
@@ -129,7 +130,7 @@ def construct_pod(
     pod = V1Pod(
         "v1",
         "Pod",
-        metadata=V1ObjectMeta(name=name, namespace=namespace, labels=labels),
+        metadata=V1ObjectMeta(name=name, namespace=namespace, labels=labels, annotations=annotations),
         spec=V1PodSpec(
             containers=[_construct_container(ci) for ci in containers],
             volumes=[_construct_volume(v) for v in volumes] if volumes else None,
@@ -146,6 +147,7 @@ def construct_deployment(
         replicas: int,
         *,
         labels: dict = None,
+        annotations: dict = None,
         volumes: List[dict] = None,
         restart_policy: str = None,
 ) -> V1Deployment:
@@ -154,6 +156,7 @@ def construct_deployment(
         namespace,
         containers,
         labels=labels,
+        annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy,
     )
@@ -166,7 +169,7 @@ def construct_deployment(
             replicas=replicas,
             selector=V1LabelSelector(match_labels=pod.metadata.labels),
             template=V1PodTemplateSpec(
-                metadata=V1ObjectMeta(labels=pod.metadata.labels),
+                metadata=V1ObjectMeta(labels=pod.metadata.labels, annotations=pod.metadata.annotations),
                 spec=pod.spec
             )
         )
