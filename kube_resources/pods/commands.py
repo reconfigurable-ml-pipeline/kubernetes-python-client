@@ -70,6 +70,7 @@ def create_pod(
         volumes: List[dict] = None,
         restart_policy: str = None,
         scheduler_name: str = None,
+        runtime_class_name: str = None,
 ):
     pod = construct_pod(
         name=name,
@@ -80,6 +81,7 @@ def create_pod(
         volumes=volumes,
         restart_policy=restart_policy,
         scheduler_name=scheduler_name,
+        runtime_class_name=runtime_class_name,
     )
     response = api.create_namespaced_pod(
         namespace=namespace, body=pod

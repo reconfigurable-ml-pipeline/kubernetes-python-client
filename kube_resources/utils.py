@@ -125,6 +125,7 @@ def construct_pod(
         volumes: List[dict] = None,
         restart_policy: str = None,
         scheduler_name: str = None,
+        runtime_class_name: str = None,
 ) -> V1Pod:
     if labels is None:
         labels = {}
@@ -137,6 +138,7 @@ def construct_pod(
             volumes=[_construct_volume(v) for v in volumes] if volumes else None,
             restart_policy=restart_policy,
             scheduler_name=scheduler_name,
+            runtime_class_name=runtime_class_name
         )
     )
     return pod
@@ -153,6 +155,7 @@ def construct_deployment(
         volumes: List[dict] = None,
         restart_policy: str = None,
         scheduler_name: str = None,
+        runtime_class_name: str = None,
 ) -> V1Deployment:
     pod = construct_pod(
         name,
@@ -163,6 +166,7 @@ def construct_deployment(
         volumes=volumes,
         restart_policy=restart_policy,
         scheduler_name=scheduler_name,
+        runtime_class_name=runtime_class_name,
     )
 
     deployment = V1Deployment(
