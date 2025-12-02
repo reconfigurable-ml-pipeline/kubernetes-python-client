@@ -109,8 +109,10 @@ def update_pod(
         name,
         containers: List[ContainerInfo],
         labels: dict = None,
+        annotations: dict = None,
         volumes: List[dict] = None,
         partial=True,
+        resize=True,
         namespace="default",
         restart_policy: str = None,
 ):
@@ -120,11 +122,15 @@ def update_pod(
         namespace=pod.metadata.namespace,
         containers=containers,
         labels=labels,
+        annotations=annotations,
         volumes=volumes,
         restart_policy=restart_policy
     )
     if partial:
-        response = api.patch_namespaced_pod_resize(name=name, namespace=namespace, body=pod)
+        if resize:
+            response = api.patch_namespaced_pod_resize(name=name, namespace=namespace, body=pod)
+        else:
+            response = api.patch_namespaced_pod(name=name, namespace=namespace, body=pod)
     else:
         response = api.replace_namespaced_pod(name=name, namespace=namespace, body=pod)
     return get_pod(response.metadata.name, namespace=namespace)
