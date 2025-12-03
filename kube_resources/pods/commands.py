@@ -16,6 +16,7 @@ def _get_pod_info(p: V1Pod):
         "node": p.spec.node_name,
         "labels": p.metadata.labels,
         "phase": p.status.phase,
+        "annotations": p.metadata.annotations,
         "conditions": list(map(
             lambda x: {"reason": x.reason, "type": x.type, "message": x.message}, p.status.conditions
         )) if p.status.conditions else [],
