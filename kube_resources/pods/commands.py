@@ -15,7 +15,7 @@ def _get_pod_info(p: V1Pod):
         "name": p.metadata.name,
         "node": p.spec.node_name,
         "containers": [
-            {k: getattr(container, k) for k in container.attribute_map}
+            container.to_dict()
             for container in p.spec.containers
         ],
         "labels": p.metadata.labels,
