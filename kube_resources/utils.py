@@ -5,7 +5,7 @@ from kubernetes.client import (
     V1Container, V1ContainerPort, V1Deployment, V1DeploymentSpec, V1LabelSelector, V1PodTemplateSpec, V1Service,
     V1ServiceSpec, V1ServicePort, V1HorizontalPodAutoscaler, V1HorizontalPodAutoscalerSpec,
     V1CrossVersionObjectReference, V1ConfigMap, V1Volume, V1VolumeMount, V1ConfigMapVolumeSource,
-    V1NFSVolumeSource, V1EmptyDirVolumeSource, V1Probe, V1ExecAction, V1HTTPGetAction
+    V1NFSVolumeSource, V1EmptyDirVolumeSource, V1Probe, V1ExecAction, V1HTTPGetAction, V1HostPathVolumeSource
 )
 from kserve import (
     V1beta1InferenceService, V1beta1InferenceServiceSpec, V1beta1PredictorSpec, V1beta1TransformerSpec, V1beta1Batcher
@@ -94,7 +94,7 @@ def _construct_container(container_info: ContainerInfo) -> V1Container:
 
 
 def _construct_volume(config: dict):
-    # Fixme: currently only allowing ConfigMap, NFS and emptyDir Volume types
+    # Fixme: currently only allowing ConfigMap, NFS, HostPath, and emptyDir Volume types
 
     if config.get("config_map"):
         v = V1Volume(
@@ -110,6 +110,11 @@ def _construct_volume(config: dict):
         v = V1Volume(
             name=config["name"],
             empty_dir=V1EmptyDirVolumeSource()
+        )
+    elif config.get("host_path"):
+        v = V1Volume(
+            name=config["name"],
+            host_path=V1HostPathVolumeSource(**config["host_path"])
         )
     else:
         v = None
