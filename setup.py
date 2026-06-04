@@ -14,6 +14,6 @@ setup(
     long_description=read(),
     install_requires=[
         "kubernetes==33.1.0b1",
-        "kserve==0.15.1",
+        "kserve==0.18.0",
     ]
 )
